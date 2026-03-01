@@ -1,0 +1,28 @@
+{
+  "name": "@sculkdev/ruhaste",
+  "version": "1.0.0",
+  "description": "CLI client for the Ruhaste pastebin service",
+  "type": "module",
+  "bin": {
+    "ruhaste": "./index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["pastebin", "cli", "ruhaste", "hastebin"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SculkDev/ruhaste-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SculkDev/ruhaste-cli/issues"
+  },
+  "homepage": "https://github.com/SculkDev/ruhaste-cli#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "index.js"
+  ]
+}
