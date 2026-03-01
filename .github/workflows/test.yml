@@ -1,0 +1,46 @@
+name: Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [18, 20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Help exits 0
+        run: node index.js --help
+
+      - name: Missing get key exits 1
+        run: |
+          node index.js get 2>&1 && exit 1 || true
+
+      - name: Missing raw key exits 1
+        run: |
+          node index.js raw 2>&1 && exit 1 || true
+
+      - name: Post and get round-trip
+        run: |
+          URL=$(echo "ruhaste ci test ${{ github.sha }}" | node index.js)
+          echo "Posted: $URL"
+          KEY=$(basename "$URL")
+          CONTENT=$(node index.js get "$KEY")
+          echo "$CONTENT" | grep -q "ruhaste ci test"
+
+      - name: Accepts full URL as key
+        run: |
+          URL=$(echo "url key test" | node index.js)
+          node index.js get "$URL" | grep -q "url key test"
