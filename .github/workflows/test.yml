@@ -21,22 +21,28 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
       - name: Help exits 0
-        run: node index.js --help
+        run: node dist/index.js --help
 
       - name: Missing get key exits 1
         run: |
-          node index.js get 2>&1 && exit 1 || true
+          node dist/index.js get 2>&1 && exit 1 || true
 
       - name: Post and get round-trip
         run: |
-          URL=$(echo "ruhaste ci test ${{ github.sha }}" | node index.js)
+          URL=$(echo "ruhaste ci test ${{ github.sha }}" | node dist/index.js)
           echo "Posted: $URL"
           KEY=$(basename "$URL")
-          CONTENT=$(node index.js get "$KEY")
+          CONTENT=$(node dist/index.js get "$KEY")
           echo "$CONTENT" | grep -q "ruhaste ci test"
 
       - name: Accepts full URL as key
         run: |
-          URL=$(echo "url key test" | node index.js)
-          node index.js get "$URL" | grep -q "url key test"
+          URL=$(echo "url key test" | node dist/index.js)
+          node dist/index.js get "$URL" | grep -q "url key test"

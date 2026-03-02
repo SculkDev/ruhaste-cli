@@ -42,7 +42,7 @@ jobs:
         run: npm ci
 
       - name: Build library
-        run: npm run build:lib
+        run: npm run build
 
       - name: Configure Git
         if: github.event_name == 'workflow_dispatch'

@@ -4,15 +4,21 @@ import { request } from "node:https";
 import { request as httpRequest } from "node:http";
 import { URL } from "node:url";
 import { env, argv, stdin, stdout, stderr, exit } from "node:process";
+import type { IncomingMessage, RequestOptions } from "node:http";
 
 const DEFAULT_URL = "https://hastebin.ru";
 const BASE_URL = (env.RUHASTE_SERVER ?? DEFAULT_URL).replace(/\/$/, "");
 
-function fetch(method, path, body) {
+interface FetchResponse {
+  status: number;
+  body: string;
+}
+
+function fetch(method: string, path: string, body?: string): Promise<FetchResponse> {
   return new Promise((resolve, reject) => {
     const url = new URL(BASE_URL + path);
     const lib = url.protocol === "https:" ? request : httpRequest;
-    const options = {
+    const options: RequestOptions = {
       hostname: url.hostname,
       port: url.port || (url.protocol === "https:" ? 443 : 80),
       path: url.pathname + url.search,
@@ -25,10 +31,10 @@ function fetch(method, path, body) {
       },
     };
 
-    const req = lib(options, (res) => {
-      const chunks = [];
-      res.on("data", (c) => chunks.push(c));
-      res.on("end", () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString() }));
+    const req = lib(options, (res: IncomingMessage) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (c: Buffer) => chunks.push(c));
+      res.on("end", () => resolve({ status: res.statusCode!, body: Buffer.concat(chunks).toString() }));
     });
 
     req.on("error", reject);
@@ -37,14 +43,14 @@ function fetch(method, path, body) {
   });
 }
 
-async function apiPost(content) {
+async function apiPost(content: string): Promise<{ key: string }> {
   const res = await fetch("POST", "/documents", content);
   const json = parseJSON(res.body);
   if (res.status !== 200) die(json?.message ?? `Server error ${res.status}`);
   return json;
 }
 
-async function apiGet(key) {
+async function apiGet(key: string): Promise<{ data: string }> {
   const res = await fetch("GET", `/documents/${key}`);
   const json = parseJSON(res.body);
   if (res.status === 404) die(`Document not found: ${key}`);
@@ -52,40 +58,40 @@ async function apiGet(key) {
   return json;
 }
 
-async function apiRaw(key) {
+async function apiRaw(key: string): Promise<string> {
   const res = await fetch("GET", `/raw/${key}`);
   if (res.status === 404) die(`Document not found: ${key}`);
   if (res.status !== 200) die(`Server error ${res.status}`);
   return res.body;
 }
 
-function parseJSON(str) {
+function parseJSON(str: string): any {
   try { return JSON.parse(str); } catch { return null; }
 }
 
-function die(msg) {
+function die(msg: string): never {
   stderr.write(`error: ${msg}\n`);
   exit(1);
 }
 
-function readStdin() {
+function readStdin(): Promise<string> {
   return new Promise((resolve, reject) => {
-    const chunks = [];
-    stdin.on("data", (c) => chunks.push(c));
+    const chunks: Buffer[] = [];
+    stdin.on("data", (c: Buffer) => chunks.push(c));
     stdin.on("end", () => resolve(Buffer.concat(chunks).toString()));
     stdin.on("error", reject);
   });
 }
 
-async function cmdPost(args) {
-  let content;
+async function cmdPost(args: string[]): Promise<void> {
+  let content: string;
   if (args.length > 0) {
     const file = args[0];
     try { content = readFileSync(file, "utf8"); }
-    catch (e) { die(`Cannot read file "${file}": ${e.message}`); }
+    catch (e: any) { die(`Cannot read file "${file}": ${e.message}`); }
   } else {
     if (stdin.isTTY) {
-      stderr.write("Reading from stdin (Ctrl+D to finish)…\n");
+      stderr.write("Reading from stdin (Ctrl+D to finish)\u2026\n");
     }
     content = await readStdin();
   }
@@ -96,7 +102,7 @@ async function cmdPost(args) {
   stdout.write(`${BASE_URL}/${key}\n`);
 }
 
-async function cmdGet(args) {
+async function cmdGet(args: string[]): Promise<void> {
   if (!args.length) die("Usage: ruhaste get <key|url>");
   const key = resolveKey(args[0]);
   const { data } = await apiGet(key);
@@ -104,7 +110,7 @@ async function cmdGet(args) {
   if (!data.endsWith("\n")) stdout.write("\n");
 }
 
-async function cmdRaw(args) {
+async function cmdRaw(args: string[]): Promise<void> {
   if (!args.length) die("Usage: ruhaste raw <key|url>");
   const key = resolveKey(args[0]);
   const text = await apiRaw(key);
@@ -112,7 +118,7 @@ async function cmdRaw(args) {
   if (!text.endsWith("\n")) stdout.write("\n");
 }
 
-function resolveKey(input) {
+function resolveKey(input: string): string {
   try {
     const u = new URL(input);
     const parts = u.pathname.split("/").filter(Boolean);
@@ -121,8 +127,8 @@ function resolveKey(input) {
   return input;
 }
 
-function help() {
-  stdout.write(`ruhaste — CLI client for a Hastebin-compatible pastebin
+function help(): void {
+  stdout.write(`ruhaste \u2014 CLI client for a Hastebin-compatible pastebin
 
 Usage:
   ruhaste [file]             Post a file (or stdin) and print the URL

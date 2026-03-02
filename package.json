@@ -4,10 +4,18 @@
   "description": "CLI client for the Ruhaste pastebin service",
   "type": "module",
   "bin": {
-    "ruhaste": "./index.js"
+    "ruhaste": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
   },
   "keywords": ["pastebin", "cli", "ruhaste", "hastebin"],
   "license": "MIT",
@@ -23,6 +31,6 @@
     "access": "public"
   },
   "files": [
-    "index.js"
+    "dist"
   ]
 }
