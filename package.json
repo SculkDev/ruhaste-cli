@@ -1,6 +1,6 @@
 {
   "name": "@sculkdev/ruhaste",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "CLI client for the Ruhaste pastebin service",
   "type": "module",
   "bin": {
