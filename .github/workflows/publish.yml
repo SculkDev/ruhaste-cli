@@ -59,5 +59,3 @@ jobs:
 
       - name: Publish to npm
         run: npm publish
-        env:
-          NPM_CONFIG_PROVENANCE: false
